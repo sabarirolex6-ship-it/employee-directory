@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Employee Directory — Prototype</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#7c3aed; --glass:rgba(255,255,255,0.03);
+      --success:#10b981; --danger:#ef4444; --radius:12px; --maxw:1100px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;}
+    body{
+      font-family:Inter,system-ui,Arial,sans-serif; margin:0; background:linear-gradient(180deg,#071022 0%, #071428 60%); color:#e6eef6; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      display:flex; align-items:flex-start; justify-content:center; padding:28px;
+    }
+    .app{width:100%; max-width:var(--maxw);} 
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#5eead4);display:flex;align-items:center;justify-content:center;color:#02111b;font-weight:800}
+    h1{font-size:18px;margin:0}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+
+    .controls{display:flex;gap:10px;align-items:center}
+    .search{background:var(--glass);border:1px solid rgba(255,255,255,0.03);padding:10px 12px;border-radius:10px;display:flex;gap:8px;align-items:center}
+    .search input{background:transparent;border:0;outline:0;color:inherit;width:220px}
+    .btn{background:linear-gradient(90deg,var(--accent),#4f46e5);border:none;color:white;padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:600}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06)}
+
+    .board{display:grid;grid-template-columns:1fr 360px;gap:18px}
+
+    /* left column */
+    .left{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:14px;border-radius:var(--radius);min-height:420px}
+    .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+    .select, .small{background:transparent;border:1px solid rgba(255,255,255,0.03);padding:8px 10px;border-radius:10px;color:var(--muted)}
+    .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:12px;display:flex;gap:10px;align-items:center;border:1px solid rgba(255,255,255,0.02)}
+    .avatar{width:54px;height:54px;border-radius:10px;background:linear-gradient(135deg,#1f2937,#111827);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+    .meta{flex:1}
+    .meta h3{margin:0;font-size:14px}
+    .meta p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+    .actions{display:flex;gap:8px}
+    .icon-btn{background:transparent;border:0;padding:6px;border-radius:8px;cursor:pointer;color:var(--muted)}
+
+    /* right column */
+    .right{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:14px;border-radius:var(--radius);min-height:420px}
+    .panel h2{margin:0 0 8px 0}
+    .details{display:flex;gap:12px;align-items:center}
+    .big-avatar{width:80px;height:80px;border-radius:12px;background:#0a1220;display:flex;align-items:center;justify-content:center;font-weight:800}
+    .detail-list{margin-top:12px}
+    .detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.02);font-size:13px;color:var(--muted)}
+
+    /* modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:flex;align-items:center;justify-content:center}
+    .modal{width:720px;max-width:95%;background:linear-gradient(180deg,#071028,#061226);padding:16px;border-radius:14px;border:1px solid rgba(255,255,255,0.03)}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+    input,textarea,select{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:10px;border-radius:8px;color:inherit;width:100%;outline:0}
+    textarea{min-height:84px}
+    .row{display:flex;gap:8px}
+    .muted{color:var(--muted);font-size:12px}
+
+    footer.small{margin-top:14px;color:var(--muted);font-size:13px;text-align:center}
+
+    /* responsive */
+    @media (max-width:900px){ .board{grid-template-columns:1fr} .right{order:2}} 
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">ED</div>
+        <div>
+          <h1>Employee Directory — Prototype</h1>
+          <p class="lead">Modern, responsive prototype — frontend-only. Stores data locally (localStorage).</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="search" title="Search by name, email, department, position">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden style="opacity:.9"><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></circle></svg>
+          <input id="search" placeholder="Search employees..." />
+        </div>
+        <button class="btn" id="addBtn">+ Add Employee</button>
+        <button class="btn ghost" id="exportBtn">Export CSV</button>
+        <label class="btn ghost" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer"><input id="importFile" type="file" accept=".csv" style="display:none"/>Import CSV</label>
+      </div>
+    </header>
+
+    <main class="board">
+      <section class="left">
+        <div class="toolbar">
+          <select id="deptFilter" class="select">
+            <option value="">All departments</option>
+          </select>
+          <select id="sortBy" class="select">
+            <option value="name">Sort: Name</option>
+            <option value="createdAt">Sort: Newest</option>
+          </select>
+          <div style="flex:1"></div>
+        </div>
+
+        <div class="list" id="list"></div>
+      </section>
+
+      <aside class="right">
+        <div class="panel">
+          <h2>Employee details</h2>
+          <div id="emptyDetails" class="muted">Select an employee to view details</div>
+          <div id="details" style="display:none">
+            <div class="details">
+              <div class="big-avatar" id="detailAvatar"></div>
+              <div>
+                <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
+                  <div>
+                    <h3 id="detailName" style="margin:0"></h3>
+                    <div class="muted" id="detailPosition"></div>
+                  </div>
+                  <div class="row">
+                    <button class="icon-btn" id="editBtn" title="Edit">✎</button>
+                    <button class="icon-btn" id="deleteBtn" title="Delete">🗑</button>
+                  </div>
+                </div>
+
+                <div class="detail-list">
+                  <div class="detail-row"><div>Email</div><div id="detailEmail"></div></div>
+                  <div class="detail-row"><div>Phone</div><div id="detailPhone"></div></div>
+                  <div class="detail-row"><div>Department</div><div id="detailDept"></div></div>
+                  <div class="detail-row"><div>Location</div><div id="detailLoc"></div></div>
+                </div>
+
+                <div style="margin-top:10px">
+                  <h4 style="margin:8px 0 6px 0">Notes</h4>
+                  <div id="notesContainer" class="muted">No notes yet.</div>
+                  <textarea id="noteText" placeholder="Add a quick note..." style="width:100%;margin-top:8px"></textarea>
+                  <div style="display:flex;gap:8px;margin-top:8px">
+                    <button class="btn" id="saveNote">Add Note</button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="small">Prototype stores everything in your browser. For production, connect to a backend + DB. Want that? I can convert it!</footer>
+      </aside>
+    </main>
+
+    <!-- Modal form -->
+    <div id="modal" style="display:none" class="modal-backdrop">
+      <div class="modal">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h3 id="modalTitle">Add employee</h3>
+          <button class="icon-btn" id="closeModal">✕</button>
+        </div>
+
+        <div class="form-grid">
+          <div>
+            <label>Name</label>
+            <input id="f_name" />
+          </div>
+          <div>
+            <label>Email</label>
+            <input id="f_email" />
+          </div>
+
+          <div>
+            <label>Phone</label>
+            <input id="f_phone" />
+          </div>
+          <div>
+            <label>Department</label>
+            <input id="f_dept" placeholder="e.g. Engineering" />
+          </div>
+
+          <div>
+            <label>Position</label>
+            <input id="f_position" />
+          </div>
+          <div>
+            <label>Location</label>
+            <input id="f_location" />
+          </div>
+
+          <div style="grid-column:1 / -1">
+            <label>Profile image (optional)</label>
+            <input id="f_image" type="file" accept="image/*" />
+            <div id="imgPreview" style="margin-top:8px"></div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+          <button class="btn ghost" id="cancelModal">Cancel</button>
+          <button class="btn" id="saveEmployee">Save</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /***** Simple localStorage-backed Employee Directory Prototype *****/
+    const storageKey = 'ed_employees_v1';
+    let employees = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    let selectedId = null;
+
+    // DOM refs
+    const listEl = document.getElementById('list');
+    const addBtn = document.getElementById('addBtn');
+    const modal = document.getElementById('modal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelModal = document.getElementById('cancelModal');
+    const saveEmployee = document.getElementById('saveEmployee');
+    const modalTitle = document.getElementById('modalTitle');
+
+    const fields = ['f_name','f_email','f_phone','f_dept','f_position','f_location','f_image'];
+
+    const searchInput = document.getElementById('search');
+    const deptFilter = document.getElementById('deptFilter');
+    const sortBy = document.getElementById('sortBy');
+
+    const detailsPane = document.getElementById('details');
+    const emptyDetails = document.getElementById('emptyDetails');
+    const detailName = document.getElementById('detailName');
+    const detailEmail = document.getElementById('detailEmail');
+    const detailPhone = document.getElementById('detailPhone');
+    const detailDept = document.getElementById('detailDept');
+    const detailLoc = document.getElementById('detailLoc');
+    const detailPosition = document.getElementById('detailPosition');
+    const detailAvatar = document.getElementById('detailAvatar');
+    const notesContainer = document.getElementById('notesContainer');
+    const noteText = document.getElementById('noteText');
+    const saveNote = document.getElementById('saveNote');
+    const editBtn = document.getElementById('editBtn');
+    const deleteBtn = document.getElementById('deleteBtn');
+
+    const exportBtn = document.getElementById('exportBtn');
+    const importFile = document.getElementById('importFile');
+
+    // init
+    renderList();
+    populateDeptFilter();
+
+    // events
+    addBtn.addEventListener('click', ()=>openModal());
+    closeModal.addEventListener('click', closeModalFn);
+    cancelModal.addEventListener('click', closeModalFn);
+    saveEmployee.addEventListener('click', onSaveEmployee);
+    searchInput.addEventListener('input', renderList);
+    deptFilter.addEventListener('change', renderList);
+    sortBy.addEventListener('change', renderList);
+
+    exportBtn.addEventListener('click', ()=>{
+      const csv = toCSV(employees);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'employees.csv'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    importFile.addEventListener('change', async (e)=>{
+      const f = e.target.files[0]; if(!f) return;
+      const txt = await f.text();
+      const parsed = csvToArray(txt);
+      // map from headers (name,email,phone,department,position,location,image)
+      parsed.forEach(row=>{
+        const obj = { id: Date.now() + Math.random(), name: row.name || row.Name || '', email: row.email || row.Email || '', phone: row.phone||row.Phone||'', department: row.department||row.Department||'', position: row.position||row.Position||'', location: row.location||row.Location||'', image: row.image||row.Image||'', notes: [], createdAt: Date.now() };
+        employees.push(obj);
+      });
+      saveAndRefresh();
+      importFile.value = '';
+      alert('Imported '+parsed.length+' rows');
+    });
+
+    function openModal(edit=false){
+      modal.style.display='flex';
+      if(edit){ modalTitle.textContent = 'Edit employee';
+        const emp = employees.find(e=>e.id==selectedId);
+        document.getElementById('f_name').value = emp.name || '';
+        document.getElementById('f_email').value = emp.email || '';
+        document.getElementById('f_phone').value = emp.phone || '';
+        document.getElementById('f_dept').value = emp.department || '';
+        document.getElementById('f_position').value = emp.position || '';
+        document.getElementById('f_location').value = emp.location || '';
+        document.getElementById('imgPreview').innerHTML = emp.image ? '<img src="'+emp.image+'" style="max-width:120px;border-radius:8px">' : '';
+      } else {
+        modalTitle.textContent = 'Add employee';
+        fields.forEach(f=>{ const el=document.getElementById(f); if(el) el.value=''; });
+        document.getElementById('imgPreview').innerHTML='';
+      }
+    }
+    function closeModalFn(){ modal.style.display='none'; }
+
+    async function onSaveEmployee(){
+      const name = document.getElementById('f_name').value.trim();
+      const email = document.getElementById('f_email').value.trim();
+      if(!name || !email){ alert('Name and email required'); return; }
+
+      // image handling (base64)
+      const fileInput = document.getElementById('f_image');
+      let imageData = '';
+      if(fileInput.files && fileInput.files[0]){
+        imageData = await fileToBase64(fileInput.files[0]);
+      } else {
+        // if editing, preserve existing
+        if(selectedId){ const emp = employees.find(e=>e.id==selectedId); imageData = emp?.image || ''; }
+      }
+
+      if(selectedId && modalTitle.textContent.includes('Edit')){
+        // update
+        employees = employees.map(e=> e.id==selectedId ? {...e, name, email, phone:document.getElementById('f_phone').value, department:document.getElementById('f_dept').value, position:document.getElementById('f_position').value, location:document.getElementById('f_location').value, image:imageData } : e );
+      } else {
+        const obj = { id: Date.now()+Math.random(), name, email, phone:document.getElementById('f_phone').value, department:document.getElementById('f_dept').value, position:document.getElementById('f_position').value, location:document.getElementById('f_location').value, image:imageData, notes:[], createdAt: Date.now() };
+        employees.unshift(obj);
+      }
+      saveAndRefresh(); closeModalFn();
+    }
+
+    function renderList(){
+      const q = searchInput.value.toLowerCase();
+      const dept = deptFilter.value;
+      const sort = sortBy.value;
+      let out = employees.slice();
+      if(dept) out = out.filter(e=> (e.department||'').toLowerCase() === dept.toLowerCase());
+      if(q) out = out.filter(e=> (e.name+e.email+ (e.department||'') + (e.position||'')).toLowerCase().includes(q));
+      if(sort==='name') out.sort((a,b)=> a.name.localeCompare(b.name)); else out.sort((a,b)=> b.createdAt - a.createdAt );
+
+      listEl.innerHTML = out.map(e=> `
+        <div class="card" data-id="${e.id}">
+          <div class="avatar">${avatarLetters(e.name)}</div>
+          <div class="meta">
+            <h3>${e.name}</h3>
+            <p class="muted">${e.position || e.department || e.email}</p>
+          </div>
+          <div class="actions">
+            <button class="icon-btn" data-action="view" title="View">👁</button>
+            <button class="icon-btn" data-action="edit" title="Edit">✎</button>
+            <button class="icon-btn" data-action="del" title="Delete">🗑</button>
+          </div>
+        </div>
+      `).join('');
+
+      // attach listeners
+      document.querySelectorAll('.card').forEach(card=>{
+        card.querySelector('[data-action=view]').addEventListener('click', ()=>{
+          selectedId = card.dataset.id; showDetails(selectedId);
+        });
+        card.querySelector('[data-action=edit]').addEventListener('click', ()=>{
+          selectedId = card.dataset.id; openModal(true);
+        });
+        card.querySelector('[data-action=del]').addEventListener('click', ()=>{
+          selectedId = card.dataset.id; if(confirm('Delete this employee?')){ employees = employees.filter(x=>x.id!=selectedId); saveAndRefresh(); selectedId=null; hideDetails(); }
+        });
+      });
+
+      populateDeptFilter();
+    }
+
+    function showDetails(id){
+      const e = employees.find(x=>x.id==id); if(!e) return;
+      emptyDetails.style.display='none'; detailsPane.style.display='block';
+      detailName.textContent = e.name; detailEmail.textContent = e.email; detailPhone.textContent = e.phone || '-'; detailDept.textContent = e.department || '-'; detailLoc.textContent = e.location || '-'; detailPosition.textContent = e.position || '-';
+      detailAvatar.innerHTML = e.image ? `<img src="${e.image}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">` : avatarLetters(e.name, true);
+      notesContainer.innerHTML = e.notes && e.notes.length ? e.notes.map(n=>`<div style="padding:8px;background:rgba(255,255,255,0.01);border-radius:8px;margin-bottom:6px"><div style="font-size:13px;color:var(--muted)">${new Date(n.date).toLocaleString()}</div><div style="margin-top:6px">${escapeHtml(n.text)}</div></div>`).join('') : '<div class="muted">No notes yet.</div>';
+    }
+    function hideDetails(){ emptyDetails.style.display='block'; detailsPane.style.display='none'; }
+
+    saveNote.addEventListener('click', ()=>{
+      const txt = noteText.value.trim(); if(!txt) return; const emp = employees.find(e=>e.id==selectedId); if(!emp) return alert('Select an employee first');
+      emp.notes.unshift({ text: txt, by: 'You', date: Date.now() });
+      saveAndRefresh(); showDetails(emp.id); noteText.value='';
+    });
+
+    editBtn.addEventListener('click', ()=>{ if(!selectedId) return; openModal(true); });
+    deleteBtn.addEventListener('click', ()=>{ if(!selectedId) return; if(confirm('Delete this employee?')){ employees = employees.filter(e=>e.id!=selectedId); saveAndRefresh(); selectedId=null; hideDetails(); }});
+
+    // helpers
+    function saveAndRefresh(){ localStorage.setItem(storageKey, JSON.stringify(employees)); renderList(); }
+    function avatarLetters(name, big=false){ const letters = (name||'--').split(' ').map(s=>s[0]||'').slice(0,2).join('').toUpperCase(); return `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-weight:700">${letters}</div>` }
+    function fileToBase64(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+    function toCSV(arr){ if(!arr.length) return '';
+      const head = ['name','email','phone','department','position','location','image','createdAt'];
+      const rows = arr.map(e=> head.map(h=> escapeCsv(String(e[h]||'')).replace(/\n/g,' ')).join(','));
+      return head.join(',') + '\n' + rows.join('\n');
+    }
+    function escapeCsv(val){ if(val==null) return ''; if(val.includes(',')||val.includes('\n')) return '"'+val.replace(/"/g,'""')+'"'; return val; }
+    function csvToArray(txt){ const lines = txt.split(/\r?\n/).filter(Boolean); if(!lines.length) return [];
+      const hdr = lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
+      const out = [];
+      for(let i=1;i<lines.length;i++){ const row = parseCsvLine(lines[i]); const obj={}; hdr.forEach((h,idx)=> obj[h]=row[idx]||''); out.push(obj); }
+      return out;
+    }
+    function parseCsvLine(line){ const res=[]; let cur=''; let inQuotes=false; for(let i=0;i<line.length;i++){ const ch=line[i]; if(ch==='"'){ if(inQuotes && line[i+1]==='"'){ cur+='"'; i++; } else { inQuotes=!inQuotes; } } else if(ch===',' && !inQuotes){ res.push(cur); cur=''; } else { cur+=ch; } } res.push(cur); return res; }
+    function populateDeptFilter(){ const set = new Set(employees.map(e=>e.department).filter(Boolean)); const before = deptFilter.value; deptFilter.innerHTML = '<option value="">All departments</option>' + Array.from(set).map(d=> `<option value="${d}">${d}</option>`).join(''); deptFilter.value = before; }
+    function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // small UX: preview image when chosen
+    document.getElementById('f_image').addEventListener('change', async (e)=>{
+      const f = e.target.files[0]; if(!f) return; const b = await fileToBase64(f); document.getElementById('imgPreview').innerHTML = `<img src="${b}" style="max-width:120px;border-radius:8px">`;
+    });
+
+    // initial demo data if empty
+    if(!employees.length){ employees = [
+      { id:1, name:'Aisha Kumar', email:'aisha.kumar@example.com', phone:'+91 98765 43210', department:'Engineering', position:'Frontend Engineer', location:'Bengaluru', image:'', notes:[{text:'Great at UI work', by:'HR', date:Date.now()-86400000}], createdAt: Date.now()-86400000 },
+      { id:2, name:'Ravi Patel', email:'ravi.patel@example.com', phone:'', department:'Sales', position:'Account Manager', location:'Hyderabad', image:'', notes:[], createdAt: Date.now()-3600000 }
+    ]; saveAndRefresh(); }
+
+  </script>
+</body>
+</html>
